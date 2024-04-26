@@ -48,8 +48,8 @@
 </head>
 
 <body style="margin: 0">
-    <div style="background-color: #1E88E5; height: 5%; width: calc(100% + 50px); padding: 16px; border-radius: 0 0 8px 8px; font-weight: bold">
-        <span id="title-bar" style="color: white; font-size: 2.5rem; padding: 1rem;">{{ banner }}</span>
+    <div id="title-bar" style="background-color: #1E88E5; height: 5%; width: calc(100% + 50px); padding: 16px; border-radius: 0 0 8px 8px; font-weight: bold">
+        <span  style="color: white; font-size: 2.5rem; padding: 1rem;">{{ banner }}</span>
     </div>
     <div style="padding: 2.5rem; min-height: 550px;">
         <div style="display: flex;">
@@ -72,7 +72,7 @@
 
 </html>
 
-<script>
+<script type="text/javascript">
     if (document.getElementById('title-bar').innerText.trim() === '') {
         document.getElementById('title-bar').style.display = 'none';
     }
