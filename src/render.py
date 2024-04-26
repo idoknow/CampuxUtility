@@ -55,17 +55,17 @@ class Text2ImgRender():
         return await self.from_html(html)
     
     async def from_html(self, html: str) -> str:
-        html_file_path = generate_data_path(suffix="html", namespace="rendered")
+        html_file_path, abs_path = generate_data_path(suffix="html", namespace="rendered")
         with open(html_file_path, "w", encoding='utf-8') as f:
             f.write(html)
-        return html_file_path
+        return html_file_path, abs_path
     
     async def html2pic(self, html_file_path: str, screenshot_options: ScreenshotOptions) -> str:
         if self.context is None:
             self.playwright = await async_playwright().start()
             self.browser = await self.playwright.chromium.launch()
             self.context = await self.browser.new_context()
-        result_path = generate_data_path(suffix="jpeg", namespace="rendered")
+        result_path, _ = generate_data_path(suffix="jpeg", namespace="rendered")
 
         logging.info(f"Rendering {html_file_path}")
 
