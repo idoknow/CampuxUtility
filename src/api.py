@@ -30,10 +30,12 @@ async def text2img(request: fastapi.Request):
     is_json_return = False
     if "json" in data:
         is_json_return = data["json"]
-    if 'tmpl' in data:
-        tmpl = data['tmpl']
-        data = data['tmpldata']
-        html_file_path, abs_path = await render.from_jinja_template(tmpl, data)
+    if 'tmpl' in data or 'tmplname' in data:
+        if 'tmpl' in data:
+            tmpl = data['tmpl']
+        else:
+            tmpl = open(f"tmpl/{data['tmplname']}.html", "r", encoding="utf-8").read()
+        html_file_path, abs_path = await render.from_jinja_template(tmpl, data['tmpldata'])
     elif 'html' in data:
         html = data["html"]
         html_file_path, abs_path = await render.from_html(html)
