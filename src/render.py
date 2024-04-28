@@ -1,6 +1,6 @@
 import logging, os, time
 
-from util import generate_data_path
+from .util import generate_data_path
 from pathlib import Path
 from playwright.async_api import async_playwright
 from jinja2 import Template

@@ -1,5 +1,5 @@
 import fastapi, os
-from render import Text2ImgRender, ScreenshotOptions
+from .render import Text2ImgRender, ScreenshotOptions
 from dataclasses import dataclass
 
 app = fastapi.FastAPI()
