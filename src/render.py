@@ -1,4 +1,6 @@
-import logging, os, time
+import logging
+import os
+import time
 
 from .util import generate_data_path
 from pathlib import Path
@@ -8,6 +10,7 @@ from typing_extensions import TypedDict
 from playwright.async_api._generated import Locator
 from playwright._impl._api_structures import FloatRect
 from typing import Literal
+
 
 class ScreenshotOptions(TypedDict):
     """Playwright 截图参数
@@ -44,7 +47,8 @@ class ScreenshotOptions(TypedDict):
     scale: Literal["css", "device", None]
     mask: list[Locator] | None
 
-class Text2ImgRender():
+
+class Text2ImgRender:
     def __init__(self):
         self.playwright = None
         self.browser = None
@@ -53,14 +57,18 @@ class Text2ImgRender():
     async def from_jinja_template(self, template: str, data: dict) -> str:
         html = Template(template).render(data)
         return await self.from_html(html)
-    
+
     async def from_html(self, html: str) -> str:
-        html_file_path, abs_path = generate_data_path(suffix="html", namespace="rendered")
-        with open(html_file_path, "w", encoding='utf-8') as f:
+        html_file_path, abs_path = generate_data_path(
+            suffix="html", namespace="rendered"
+        )
+        with open(html_file_path, "w", encoding="utf-8") as f:
             f.write(html)
         return html_file_path, abs_path
-    
-    async def html2pic(self, html_file_path: str, screenshot_options: ScreenshotOptions) -> str:
+
+    async def html2pic(
+        self, html_file_path: str, screenshot_options: ScreenshotOptions
+    ) -> str:
         if self.context is None:
             self.playwright = await async_playwright().start()
             self.browser = await self.playwright.chromium.launch()
@@ -70,7 +78,7 @@ class Text2ImgRender():
         logging.info(f"Rendering {html_file_path}")
 
         page = await self.context.new_page()
-        await page.goto(f'file://{html_file_path}')
+        await page.goto(f"file://{html_file_path}")
         await page.screenshot(path=result_path, **screenshot_options)
         await page.close()
 
