@@ -47,7 +47,7 @@ async def text2img(request: fastapi.Request):
 
     if is_json_return:
         return Result(code=0, message="success", data={
-            "id": pic
+            "id": pic.replace('\\', '/')
         })
     else:
         return fastapi.responses.FileResponse(pic, media_type="image/jpeg")
