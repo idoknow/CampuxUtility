@@ -1,9 +1,6 @@
 import logging
-import os
-import time
 
 from .util import generate_data_path
-from pathlib import Path
 from playwright.async_api import async_playwright
 from jinja2 import Template
 from typing_extensions import TypedDict
@@ -54,11 +51,11 @@ class Text2ImgRender:
         self.browser = None
         self.context = None
 
-    async def from_jinja_template(self, template: str, data: dict) -> str:
+    async def from_jinja_template(self, template: str, data: dict) -> tuple[str, str]:
         html = Template(template).render(data)
         return await self.from_html(html)
 
-    async def from_html(self, html: str) -> str:
+    async def from_html(self, html: str) -> tuple[str, str]:
         html_file_path, abs_path = generate_data_path(
             suffix="html", namespace="rendered"
         )
