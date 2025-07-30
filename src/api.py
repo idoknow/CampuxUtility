@@ -1,10 +1,33 @@
 import fastapi
 import os
+import asyncio
+from loguru import logger
 from .render import Text2ImgRender, ScreenshotOptions
+from .util import cleanup_expired_files
 from dataclasses import dataclass
 
 app = fastapi.FastAPI()
 render = Text2ImgRender()
+
+
+# 启动时创建清理任务
+@app.on_event("startup")
+async def startup_event():
+    """应用启动时的事件处理"""
+    # 启动定期清理任务
+    asyncio.create_task(periodic_cleanup())
+    logger.info("Started periodic cleanup task")
+
+
+async def periodic_cleanup():
+    """定期清理过期文件的后台任务"""
+    while True:
+        try:
+            cleanup_expired_files()
+        except Exception as e:
+            logger.error(f"Error during periodic cleanup: {e}")
+        # 每小时执行一次清理
+        await asyncio.sleep(3600)
 
 
 @dataclass
@@ -50,7 +73,18 @@ async def text2img(request: fastapi.Request):
     options = (
         ScreenshotOptions(**data["options"])
         if "options" in data
-        else ScreenshotOptions()
+        else ScreenshotOptions(
+            timeout=None,
+            type=None,
+            quality=None,
+            omit_background=None,
+            full_page=True,
+            clip=None,
+            animations=None,
+            caret=None,
+            scale=None,
+            mask=None,
+        )
     )
 
     pic = await render.html2pic(abs_path, options)
@@ -64,4 +98,4 @@ async def text2img(request: fastapi.Request):
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run(app, host="0.0.0.0", port=8999)
+    uvicorn.run(app, host="0.0.0.0", port=int(os.getenv("PORT", 8999)))

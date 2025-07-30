@@ -1,6 +1,17 @@
 # Idoknow-api-text2img
 
-## POST /text2img/generate
+## 功能
+
+一个将 HTML/模板转换为图片的 Web 服务，支持图片生命周期管理。
+
+## 环境变量配置
+
+- `PORT`: 服务端口，默认 8999
+- `IMAGE_LIFETIME_HOURS`: 图片生命时间（小时），默认 24 小时。超过此时间的图片文件将被自动清理
+
+## API 接口
+
+### POST /text2img/generate
 
 html 转 img
 
@@ -22,6 +33,6 @@ html 转 img
   - scale: (Literal["css", "device"], optional): 页面缩放设置. 当设置为 `css` 时，则将设备分辨率与 CSS 中的像素一一对应，在高分屏上会使得截图变小. 当设置为 `device` 时，则根据设备的屏幕缩放设置或当前 Playwright 的 Page/Context 中的 device_scale_factor 参数来缩放.
   - mask (List["Locator"]], optional): 指定截图时的遮罩的 Locator。元素将被一颜色为 #FF00FF 的框覆盖.
 
-## GET /text2img/data/{id}
+### GET /text2img/data/{id}
 
 根据 id 返回对应的图像。
