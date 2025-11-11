@@ -1,8 +1,8 @@
-# Idoknow-api-text2img
+# AstrBot Text2Image Service
 
 ## 功能
 
-一个将 HTML/模板转换为图片的 Web 服务，支持图片生命周期管理。
+一个简单的将 HTML/模板转换为图片的 Web 服务，支持图片生命周期管理。
 
 ## 环境变量配置
 
