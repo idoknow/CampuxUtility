@@ -2,7 +2,7 @@ import logging
 
 from .util import generate_data_path
 from playwright.async_api import async_playwright
-from jinja2 import Template
+from jinja2.sandbox import SandboxedEnvironment
 from typing_extensions import TypedDict
 from playwright.async_api._generated import Locator
 from playwright._impl._api_structures import FloatRect
@@ -52,7 +52,8 @@ class Text2ImgRender:
         self.context = None
 
     async def from_jinja_template(self, template: str, data: dict) -> tuple[str, str]:
-        html = Template(template).render(data)
+        env = SandboxedEnvironment()
+        html = env.from_string(template).render(data)
         return await self.from_html(html)
 
     async def from_html(self, html: str) -> tuple[str, str]:
