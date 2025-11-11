@@ -1,13 +1,24 @@
 import fastapi
 import os
 import asyncio
+from pydantic import BaseModel
+from jinja2.exceptions import SecurityError
+from fastapi.responses import JSONResponse
 from loguru import logger
 from .render import Text2ImgRender, ScreenshotOptions
 from .util import cleanup_expired_files
-from dataclasses import dataclass
 
 app = fastapi.FastAPI()
 render = Text2ImgRender()
+
+
+class GenerateRequest(BaseModel):
+    html: str | None = None
+    tmpl: str | None = None
+    tmplname: str | None = None
+    tmpldata: dict | None = None
+    options: ScreenshotOptions | None = None
+    json: bool = False
 
 
 # 启动时创建清理任务
@@ -30,49 +41,58 @@ async def periodic_cleanup():
         await asyncio.sleep(3600)
 
 
-@dataclass
-class Result:
-    code: int
-    message: str
-    data: dict
-
-
 @app.get("/text2img/data/{id}")
 async def text2img_image(id: str):
     pic = f"data/{id}"
     if os.path.exists(pic):
         return fastapi.responses.FileResponse(pic, media_type="image/jpeg")
     else:
-        return Result(code=1, message="file not found", data={})
+        return JSONResponse(
+            status_code=404,
+            content={"code": 1, "message": "file not found", "data": {}},
+        )
 
 
 @app.post("/text2img/generate")
-async def text2img(request: fastapi.Request):
+async def text2img(request: GenerateRequest):
     """
     html: str
     options: ScreenshotOptions
     """
 
-    data = await request.json()
-    is_json_return = False
-    if "json" in data:
-        is_json_return = data["json"]
-    if "tmpl" in data or "tmplname" in data:
-        if "tmpl" in data:
-            tmpl = data["tmpl"]
+    is_json_return = request.json or False
+    if request.tmpl or request.tmplname:
+        if request.tmpl:
+            tmpl = request.tmpl
         else:
-            tmpl = open(f"tmpl/{data['tmplname']}.html", "r", encoding="utf-8").read()
-        html_file_path, abs_path = await render.from_jinja_template(
-            tmpl, data["tmpldata"]
-        )
-    elif "html" in data:
-        html = data["html"]
-        html_file_path, abs_path = await render.from_html(html)
+            tmpl = open(f"tmpl/{request.tmplname}.html", "r", encoding="utf-8").read()
+        try:
+            _, abs_path = await render.from_jinja_template(tmpl, request.tmpldata or {})
+        except SecurityError as e:
+            return JSONResponse(
+                status_code=400,
+                content={"code": 1, "message": f"security error: {str(e)}", "data": {}},
+            )
+        except Exception as e:
+            return JSONResponse(
+                status_code=500,
+                content={
+                    "code": 1,
+                    "message": f"template render error: {str(e)}",
+                    "data": {},
+                },
+            )
+    elif request.html:
+        html = request.html
+        _, abs_path = await render.from_html(html)
     else:
-        return Result(code=1, message="html or tmpl not found", data={})
+        return JSONResponse(
+            status_code=400,
+            content={"code": 1, "message": "html or tmpl not found", "data": {}},
+        )
     options = (
-        ScreenshotOptions(**data["options"])
-        if "options" in data
+        request.options
+        if request.options
         else ScreenshotOptions(
             timeout=None,
             type=None,
@@ -83,14 +103,19 @@ async def text2img(request: fastapi.Request):
             animations=None,
             caret=None,
             scale=None,
-            mask=None,
         )
     )
 
     pic = await render.html2pic(abs_path, options)
 
     if is_json_return:
-        return Result(code=0, message="success", data={"id": pic.replace("\\", "/")})
+        return JSONResponse(
+            content={
+                "code": 0,
+                "message": "success",
+                "data": {"id": pic.replace("\\", "/")},
+            },
+        )
     else:
         return fastapi.responses.FileResponse(pic, media_type="image/jpeg")
 

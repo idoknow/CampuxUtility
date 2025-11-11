@@ -28,14 +28,4 @@ jobs:
     - name: Create Buildx
       run: docker buildx create --name mybuilder --use
     - name: Build
-      run: docker buildx build --platform linux/arm64,linux/amd64 -t rockchin/campuxutility:latest . --push
-
-    - name: Push Finish Notification
-      run: |
-        curl --location '${{ secrets.ONEBOT_V11_ENDPOINT }}/send_group_msg' \
-          --header 'Content-Type: application/json' \
-          --header 'Authorization: Bearer ${{ secrets.ONEBOT_V11_TOKEN }}' \
-          --data '{
-              "group_id": ${{ secrets.ONEBOT_V11_GROUP_ID }},
-              "message": "CampuxUtility 构建完成。"
-          }'
+      run: docker buildx build --platform linux/arm64,linux/amd64 -t soulter/astrbot-t2i-service:latest . --push

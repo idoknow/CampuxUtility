@@ -3,13 +3,17 @@ import logging
 from .util import generate_data_path
 from playwright.async_api import async_playwright
 from jinja2.sandbox import SandboxedEnvironment
+from pydantic import BaseModel
 from typing_extensions import TypedDict
-from playwright.async_api._generated import Locator
-from playwright._impl._api_structures import FloatRect
 from typing import Literal
 
+class FloatRect(TypedDict):
+    x: float
+    y: float
+    width: float
+    height: float
 
-class ScreenshotOptions(TypedDict):
+class ScreenshotOptions(BaseModel):
     """Playwright 截图参数
 
     详见：https://playwright.dev/python/docs/api/class-page#page-screenshot
@@ -28,7 +32,6 @@ class ScreenshotOptions(TypedDict):
             当设置为 `css` 时，则将设备分辨率与 CSS 中的像素一一对应，在高分屏上会使得截图变小.
             当设置为 `device` 时，则根据设备的屏幕缩放设置或当前 Playwright 的 Page/Context 中的
             device_scale_factor 参数来缩放.
-        mask (List["Locator"]], optional): 指定截图时的遮罩的 Locator。元素将被一颜色为 #FF00FF 的框覆盖.
 
     @author: Redlnn(https://github.com/GraiaCommunity/graiax-text2img-playwright)
     """
@@ -42,7 +45,6 @@ class ScreenshotOptions(TypedDict):
     animations: Literal["allow", "disabled", None]
     caret: Literal["hide", "initial", None]
     scale: Literal["css", "device", None]
-    mask: list[Locator] | None
 
 
 class Text2ImgRender:
@@ -77,7 +79,7 @@ class Text2ImgRender:
 
         page = await self.context.new_page()
         await page.goto(f"file://{html_file_path}")
-        await page.screenshot(path=result_path, **screenshot_options)
+        await page.screenshot(path=result_path, **screenshot_options.model_dump())
         await page.close()
 
         logging.info(f"Rendered {html_file_path} to {result_path}")
