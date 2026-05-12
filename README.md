@@ -1,4 +1,4 @@
-# AstrBot Text2Image Service
+# Campux & AstrBot Text2Image Service
 
 ## 功能
 
