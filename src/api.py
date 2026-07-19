@@ -3,13 +3,15 @@ import os
 import asyncio
 from pydantic import BaseModel
 from jinja2.exceptions import SecurityError
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, Response
 from loguru import logger
 from .render import Text2ImgRender, ScreenshotOptions
+from .storage import create_image_storage
 from .util import cleanup_expired_files
 
 app = fastapi.FastAPI()
 render = Text2ImgRender()
+image_storage = create_image_storage()
 
 
 class GenerateRequest(BaseModel):
@@ -43,14 +45,15 @@ async def periodic_cleanup():
 
 @app.get("/text2img/data/{id}")
 async def text2img_image(id: str):
-    pic = f"data/{id}"
-    if os.path.exists(pic):
-        return fastapi.responses.FileResponse(pic, media_type="image/jpeg")
-    else:
+    image = await image_storage.get(id)
+    if image is None:
         return JSONResponse(
             status_code=404,
             content={"code": 1, "message": "file not found", "data": {}},
         )
+    if image.path is not None:
+        return FileResponse(image.path, media_type=image.media_type)
+    return Response(content=image.content, media_type=image.media_type)
 
 
 @app.post("/text2img/generate")
@@ -109,15 +112,27 @@ async def text2img(request: GenerateRequest):
     pic = await render.html2pic(abs_path, options)
 
     if is_json_return:
+        try:
+            image_id = await image_storage.save(pic)
+        except Exception:
+            logger.exception("Failed to persist rendered image")
+            return JSONResponse(
+                status_code=500,
+                content={
+                    "code": 1,
+                    "message": "image storage error",
+                    "data": {},
+                },
+            )
         return JSONResponse(
             content={
                 "code": 0,
                 "message": "success",
-                "data": {"id": pic.replace("\\", "/")},
+                "data": {"id": image_id},
             },
         )
     else:
-        return fastapi.responses.FileResponse(pic, media_type="image/jpeg")
+        return FileResponse(pic, media_type="image/jpeg")
 
 
 if __name__ == "__main__":

@@ -3,3 +3,4 @@ fastapi
 uvicorn
 jinja2
 loguru
+boto3

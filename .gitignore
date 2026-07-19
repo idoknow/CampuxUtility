@@ -160,6 +160,5 @@ cython_debug/
 #.idea/
 venv
 cache.json
-/tests
 
 data/
